@@ -33,6 +33,8 @@ def get_data(collection, word):
     count = 0
 
     print("word : ", word)
+
+    # 기사 검색
     for cursor in collection.find({"content":{'$regex':word}}):
         count = count + 1
         if '_id' in cursor.keys():
@@ -69,6 +71,7 @@ def get_content_data(collection, date):
     total_count = 100
     count = 0
 
+    # 날짜 검색
     for cursor in collection.find({"articleDate":{'$regex':date}}):
         count = count + 1
         index = cursor['_id']
@@ -93,6 +96,7 @@ def content_to_file(collection, date):
     f_index = open("news_index_naver.txt", "w")
     f_no_index = open("news_no_index_naver.txt", "w")
 
+    # 날짜 검색
     for cursor in collection.find({"articleDate":{'$regex':date}}):
         count = count + 1
         index = cursor['_id']
@@ -145,6 +149,7 @@ def get_contents_from_db():
                     print("no date")
 
                 else:
+                    # 시간 검색
                     print("find date | ", end='')
                     cursor = collection.find({"articleAt":{'$gte':start, '$lt':end}})
                     print("set date list | ", end='')
@@ -223,4 +228,3 @@ for year in range(2017, 2016, -1):
 
             contents_list.append(load_data(contents_filename))
             hashValue_list.append(load_data(hashValue_filename))
-
