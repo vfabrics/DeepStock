@@ -1,14 +1,12 @@
 #-*- coding: utf-8 -*-
-from soynlp.tokenizer import RegexTokenizer, MaxScoreTokenizer
-import pprint
 import codecs
-from krwordrank.word import KRWordRank
-import numpy as np
-
-from krwordrank.hangle import normalize
 import pickle
 from konlpy.tag import Twitter
+tw = Twitter()
 
+# ---------------------------
+# data read
+# ---------------------------
 def load_data(filename):
     data_list = []
     try:
@@ -21,7 +19,14 @@ def load_data(filename):
     except:
         print("error : %s"%(filename))
 
+# ---------------------------
+# 저장된 기사 데이터 및 레이블 읽기
+# ---------------------------
 def get_data_set(y, m, d):
+    # y = year
+    # m = month
+    # d = day
+    # 2017.06.31 부터 이전으로 계산
     contents_list = []
     hashValue_list = []
     for year in range(2017, y, -1):
@@ -40,23 +45,33 @@ def get_data_set(y, m, d):
 
     return contents_list, hashValue_list
 
-def texts_to_sequences(text, dic):
-    #res = []
-    res = [dic[word] for word in text if word in dic]
-    #for word in text:
-    #    if word in dic:
-    #        res.append(dic[word])
 
+# ---------------------------
+# 기사의 단어를 딕셔너리에 있는 단어의 인덱스로 변환 (딕셔너리에 없는 단어 제외)
+# ---------------------------
+def texts_to_sequences(text, dic):
+    res = [dic[word] for word in text if word in dic]
     return res
 
 
+# ---------------------------
+# 단어 파싱 및 품사 형태로 저장
+# 정규화 및 어근화
+# ---------------------------
 def tokenize(doc, tw):
     return ['/'.join(t) for t in tw.pos(doc, norm=True , stem=True)]
 
+
+# ---------------------------
+# 단어 파싱
+# ---------------------------
 def tokenize_word(doc, tw):
     return [t[0] for t in tw.pos(doc, norm=True , stem=True)]
 
 
+# ---------------------------
+# 문서의 단어를 이용해서 단어의 인덱스 사전 생성
+# ---------------------------
 def create_dictionary(doc):
     # tokenize
     tokens = [t for d in train_docs for t in d]
@@ -71,6 +86,9 @@ def create_dictionary(doc):
     return dic
 
 
+# ---------------------------
+# 2D list -> 1D list
+# ---------------------------
 def convert2DListto1DList(list):
     result = []
     for element in list:
@@ -80,7 +98,11 @@ def convert2DListto1DList(list):
     return result
 
 
+# ---------------------------
+# 기사의 종류를 one-hot 인코딩으로 변환
+# ---------------------------
 def label_to_list(labels):
+    # one-hot encoding
     res = np.zeros([len(labels), 6])
     index = 0
     for label in labels:
@@ -102,24 +124,33 @@ def label_to_list(labels):
     return res
 
 
-# load docs
-#contents_list, labels_list = get_data_set(2016, 5, 10)
+
+###########################
+# set data
+###########################
+
+# -------------------------
+# data read
+# -------------------------
 contents_list, labels_list = get_data_set(2016, 0, 0)
-tw = Twitter()
-
-from joblib import Parallel, delayed
-
-ttrain_docs = Parallel(n_jobs=6)(delayed([tokenize(row, tw) for contents in contents_list for row in contents]))
 
 train_docs = [tokenize(row, tw) for contents in contents_list for row in contents]
 dic = create_dictionary(train_docs)
 res = [texts_to_sequences(docs, dic) for docs in train_docs]
+
+# -------------------------
+# data save
+# -------------------------
+
+# 전체 기사
 with open("contents_list.pickle", 'wb') as fp:
     pickle.dump(contents_list, fp)
 
+# 종류
 with open("labels_list.pickle", 'wb') as fp:
     pickle.dump(labels_list, fp)
 
+# 파싱된 기사
 index = 0
 for start in range(0, len(train_docs), 20000):
     f = "docs/train_doc_"+str(index)+".pickle"
@@ -130,13 +161,17 @@ for start in range(0, len(train_docs), 20000):
             end = len(train_docs)
         pickle.dump(train_docs[start:end], fp)
 
+# 딕셔너리
 with open("dic.pickle", 'wb') as fp:
     pickle.dump(dic, fp)
 
+# index로 표현된 기사
 with open("res.pickle", 'wb') as fp:
     pickle.dump(res, fp)
 
-######################################################
+# -------------------------
+# data load
+# -------------------------
 with open("contents_list.pickle", 'rb') as fp:
     contents_list = pickle.load(fp)
 
@@ -161,6 +196,9 @@ for start in range(1, 9):
     with open(f, 'rb') as fp:
         train_docs = train_docs + pickle.load(fp)
 
+#######################################################################
+
+
 # 2d to 1d
 _res = convert2DListto1DList(res)
 # _res = sum(res, [])
@@ -168,13 +206,22 @@ _labels = sum(labels_list, [])
 
 
 from gensim.models import word2vec
+
+# create model
 model = word2vec.Word2Vec(train_docs)
 model.init_sims(replace=True)
 
+
+#####################################################################################################
+#-----------------------------
+# test
+#-----------------------------
+# gensim test
 model.similarity(*tokenize('LG', tw), *tokenize(u'삼성', tw))
 
 from konlpy.utils import pprint
 
+# 상위 100 출력
 pprint(model.most_similar(positive=tokenize('cj', tw), topn=100))
 
 
@@ -200,7 +247,10 @@ for row in contents:
     train_docs = tokenize(row, tw)
     for words in train_docs:
         word_similarity.append(model.similarity(*tokenize(words, tw), *tokenize(u'삼성', tw)))
+#####################################################################################################
 
+
+# 회사 리스트
 news_list = [
 "CJ",
 "LG",
@@ -218,6 +268,9 @@ u"한진",
 u"한화",
 u"현대"]
 
+#----------------------------------
+# 기사 유사도 테스트
+#----------------------------------
 word_similarity = np.zeros([15, 15, 20])
 i = 0
 for news in news_list:
@@ -261,7 +314,9 @@ filelist= "word_contents.txt"
 f = open(filelist, "r")
 f.read().splitlines()
 
-
+# ----------------------------
+# 기사 유사도 그래프
+# ----------------------------
 import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
 font_fname = 'c:/windows/fonts/NanumGothic.ttf'     # A font of your choice
