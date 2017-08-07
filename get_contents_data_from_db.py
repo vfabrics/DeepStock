@@ -32,7 +32,7 @@ def get_data(collection, word):
     total_count = 100
     count = 0
 
-    print("word : ", word)
+    print("word : %s"%word)
 
     # 기사 검색
     for cursor in collection.find({"content":{'$regex':word}}):
@@ -211,8 +211,15 @@ def load_data(filename):
 ################################################################################################
 if __name__== "__main__":
 
+    import sys
+    reload(sys)  # Reload is a hack
+    sys.setdefaultencoding('UTF8')
+
+
     collection = connect_mongodb(HOST, PORT, DB_NAME, COLLECTION_NAME)
+
     get_company_contents_data(collection, "company.txt")
+
     get_contents_from_db()
 
 
