@@ -132,12 +132,13 @@ def label_to_list(labels):
 def strToBool(v):
     return v.lower() in ("true", "yes", "t", "1")
 
-###########################
-# set data
-###########################
-
+############################################################
 if __name__ == "__main__":
 
+
+    ###########################
+    # argument parser
+    ###########################
     parser = argparse.ArgumentParser()
     parser.add_argument("--l", default='False', type=str, help="data load")
     parser.add_argument("--t", default='False', type=str, help="test")
@@ -148,9 +149,11 @@ if __name__ == "__main__":
     flag_test = strToBool(args.t)
     flag_graph = strToBool(args.g)
 
-    # -------------------------
-    # data read
-    # -------------------------
+    ###########################
+    # STEP 1. Set Data
+    # Create Dataset or Load Dataset
+    ###########################
+
     #if flag_load == False:
     if os.path.isfile("contents_list.pickle")  == False:
         print("Get Data from DB")
@@ -229,19 +232,12 @@ if __name__ == "__main__":
             with open(f, 'rb') as fp:
                 train_docs = train_docs + pickle.load(fp)
 
-
-
     #######################################################################
 
-
-        # 2d to 1d
-        _res = convert2DListto1DList(res)
-        # _res = sum(res, [])
-        _labels = sum(labels_list, [])
-
-
-
-
+    ###########################
+    # STEP 2. Create Word2Vec Model using Gensim Library
+    # Save model.pickle
+    ###########################
     if os.path.isfile("model.pickle"):
         print("Load Model File")
         with open("model.pickle", 'rb') as fp:
@@ -258,10 +254,11 @@ if __name__ == "__main__":
     model.init_sims(replace=True)
     #####################################################################################################
 
+    #-----------------------------
+    # test
+    #-----------------------------
     if flag_test == True:
-        #-----------------------------
-        # test
-        #-----------------------------
+
         # gensim test
         model.similarity(*tokenize('LG', tw), *tokenize(u'삼성', tw))
 
@@ -319,6 +316,10 @@ if __name__ == "__main__":
     u"현대"]
     '''
 
+    ###########################
+    # STEP 3. Similarity Test
+    # 유사도 결과 저장 (pickle)
+    ###########################
     if flag_graph == False:
         #----------------------------------
         # 기사 유사도 테스트
@@ -365,9 +366,16 @@ if __name__ == "__main__":
             i += 1
 
 
+        # ----------------------------
+        # save word_similarity result
+        # ----------------------------
         with open("result.pickle", 'wb') as fp:
             pickle.dump(word_similarity, fp)
 
+
+    ###########################
+    # STEP 4. Save result graph
+    ###########################
     if flag_graph == True:
         # ----------------------------
         # 기사 유사도 그래프
