@@ -1,5 +1,4 @@
 #-*- coding: utf-8 -*-
-from soynlp.tokenizer import RegexTokenizer, MaxScoreTokenizer
 import pprint
 from krwordrank.word import KRWordRank
 
