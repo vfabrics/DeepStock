@@ -260,7 +260,7 @@ if __name__ == "__main__":
     if flag_test == True:
 
         # gensim test
-        model.similarity(*tokenize('LG', tw), *tokenize(u'삼성', tw))
+        model.similarity(tokenize('LG', tw)[0], tokenize(u'삼성', tw)[0])
 
         from konlpy.utils import pprint
 
@@ -276,7 +276,7 @@ if __name__ == "__main__":
         train_docs = tokenize(contents, tw)
         for words in train_docs:
             try:
-                word_similarity.append(model.similarity(words, *tokenize(u'삼성', tw)))
+                word_similarity.append(model.similarity(words, tokenize(u'삼성', tw)[0]))
             except:
                 print("error : %s"%words)
 
@@ -288,7 +288,7 @@ if __name__ == "__main__":
         for row in contents:
             train_docs = tokenize(row, tw)
             for words in train_docs:
-                word_similarity.append(model.similarity(*tokenize(words, tw), *tokenize(u'삼성', tw)))
+                word_similarity.append(model.similarity(*tokenize(words, tw), tokenize(u'삼성', tw)[0]))
     #####################################################################################################
 
     print("Get Company List")
@@ -353,7 +353,8 @@ if __name__ == "__main__":
                             temp = []
                             for words in train_docs:
                                 try:
-                                    temp.append(model.similarity(words, *tokenize(company, tw)))
+                                    #temp.append(model.similarity(words, *tokenize(company, tw)))
+                                    temp.append(model.similarity(words, tokenize(company, tw)[0]))
                                 except:
                                     pass
                                     #print("error : ", words)
@@ -397,3 +398,5 @@ if __name__ == "__main__":
             fig = plt.plot(word_similarity[i,:,0:5])
             filename = "graph_"+str(news_list[i]+".png")
             plt.savefig(filename)
+
+
