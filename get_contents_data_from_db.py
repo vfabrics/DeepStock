@@ -150,15 +150,20 @@ def get_contents_from_db():
 
                 else:
                     # 시간 검색
-                    print("find date | ", end='')
+                    #print("find date | ", end='')
+                    sys.stdout.println("find date |");
                     cursor = collection.find({"articleAt":{'$gte':start, '$lt':end}})
-                    print("set date list | ", end='')
+
+                    sys.stdout.println("set date list|");
+                    #print("set date list | ", end='')
+
                     date_list = [x['_id'] for x in cursor]
                     print("list shuffle | ")
                     random.shuffle(date_list)
 
                     if len(date_list) > 100:
-                        print("date_list size : %d\n"%(len(date_list)), end='')
+                        sys.stdout.println("date_list sizez : %d\n"%(len(date_list)));
+                        #print("date_list size : %d\n"%(len(date_list)), end='')
 
                         i = 0
                         while i<_limit and i<len(date_list):
@@ -190,13 +195,6 @@ def get_contents_from_db():
                                 f_content.write("%s\n"%(content))
                         '''
 
-collection = connect_mongodb(HOST, PORT, DB_NAME, COLLECTION_NAME)
-get_company_contents_data(collection, "company.txt")
-get_contents_from_db()
-
-################################################################################################
-
-
 def load_data(filename):
     data_list = []
     try:
@@ -210,21 +208,31 @@ def load_data(filename):
         print("error : %s"%(filename))
 
 
-# ---------------------------
-# 저장된 기사 읽기
-# ---------------------------
-year = 2017
-month = 6
-day = 29
+################################################################################################
+if __name__== "__main__":
 
-for year in range(2017, 2016, -1):
-    for month in range(6, 5, -1):
-        for day in range(31, 0, -1):
+    collection = connect_mongodb(HOST, PORT, DB_NAME, COLLECTION_NAME)
+    get_company_contents_data(collection, "company.txt")
+    get_contents_from_db()
 
-            contents_list = []
-            hashValue_list = []
-            contents_filename = "contents/%d-%d-%d.pickle"%(year, month, day)
-            hashValue_filename = "hashValue/%d-%d-%d_label.pickle"%(year, month, day)
 
-            contents_list.append(load_data(contents_filename))
-            hashValue_list.append(load_data(hashValue_filename))
+    # ---------------------------
+    # 저장된 기사 읽기
+    # ---------------------------
+    '''
+    year = 2017
+    month = 6
+    day = 29
+
+    for year in range(2017, 2016, -1):
+        for month in range(6, 5, -1):
+            for day in range(31, 0, -1):
+
+                contents_list = []
+                hashValue_list = []
+                contents_filename = "contents/%d-%d-%d.pickle"%(year, month, day)
+                hashValue_filename = "hashValue/%d-%d-%d_label.pickle"%(year, month, day)
+
+                contents_list.append(load_data(contents_filename))
+                hashValue_list.append(load_data(hashValue_filename))
+    '''
