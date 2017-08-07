@@ -13,6 +13,9 @@ PORT = 27017
 DB_NAME = "news"
 COLLECTION_NAME = "naver"
 
+# ---------------------------
+# connect mongo database
+# ---------------------------
 def connect_mongodb(host, port, db_name, collection_name):
 
     conn = pymongo.MongoClient(host, port)
@@ -21,12 +24,17 @@ def connect_mongodb(host, port, db_name, collection_name):
 
     return collection
 
+# ---------------------------
+# 검색하는 단어를 포함한 기사 검색 및 저장 (100개)
+# ---------------------------
 def get_data(collection, word):
 
     total_count = 100
     count = 0
 
     print("word : ", word)
+
+    # 기사 검색
     for cursor in collection.find({"content":{'$regex':word}}):
         count = count + 1
         if '_id' in cursor.keys():
@@ -43,8 +51,10 @@ def get_data(collection, word):
                         print("filename : %s\n"%(filename))
                         f_content.write(content)
 
-collection = connect_mongodb(HOST, PORT, DB_NAME, COLLECTION_NAME)
 
+# ---------------------------
+# filename의 회사를 get_data로 검색 후 기사 저장
+# ---------------------------
 def get_company_contents_data(collection, filename):
     with open(filename) as f:
         lines = f.read().splitlines()
@@ -52,13 +62,16 @@ def get_company_contents_data(collection, filename):
     for word in lines:
         get_data(collection, word)
 
-get_company_contents_data(collection, "company.txt")
 
+# ---------------------------
+# 날짜로 검색 후 기사 저장
+# ---------------------------
 def get_content_data(collection, date):
 
     total_count = 100
     count = 0
 
+    # 날짜 검색
     for cursor in collection.find({"articleDate":{'$regex':date}}):
         count = count + 1
         index = cursor['_id']
@@ -71,6 +84,9 @@ def get_content_data(collection, date):
                 print("filename : %s\n"%(filename))
                 f_content.write(content)
 
+# ---------------------------
+# 기사 검색 후 파일로 저장
+# ---------------------------
 def content_to_file(collection, date):
 
     index = collection.find()
@@ -80,6 +96,7 @@ def content_to_file(collection, date):
     f_index = open("news_index_naver.txt", "w")
     f_no_index = open("news_no_index_naver.txt", "w")
 
+    # 날짜 검색
     for cursor in collection.find({"articleDate":{'$regex':date}}):
         count = count + 1
         index = cursor['_id']
@@ -101,9 +118,11 @@ def content_to_file(collection, date):
     f_index.close()
     f_no_index.close()
 
-collection = connect_mongodb(HOST, PORT, DB_NAME, COLLECTION_NAME)
-get_company_contents_data(collection, "company.txt")
 
+
+# ---------------------------
+# 날짜 별 기사 검색 (100개) 후 해당 날짜에서 랜덤으로 기사 추출 후 파일로 저장 / 기사 종류(label)도 저장
+# ---------------------------
 def get_contents_from_db():
     _limit = 100
 
@@ -130,6 +149,7 @@ def get_contents_from_db():
                     print("no date")
 
                 else:
+                    # 시간 검색
                     print("find date | ", end='')
                     cursor = collection.find({"articleAt":{'$gte':start, '$lt':end}})
                     print("set date list | ", end='')
@@ -170,6 +190,8 @@ def get_contents_from_db():
                                 f_content.write("%s\n"%(content))
                         '''
 
+collection = connect_mongodb(HOST, PORT, DB_NAME, COLLECTION_NAME)
+get_company_contents_data(collection, "company.txt")
 get_contents_from_db()
 
 ################################################################################################
@@ -188,6 +210,9 @@ def load_data(filename):
         print("error : %s"%(filename))
 
 
+# ---------------------------
+# 저장된 기사 읽기
+# ---------------------------
 year = 2017
 month = 6
 day = 29
@@ -203,27 +228,3 @@ for year in range(2017, 2016, -1):
 
             contents_list.append(load_data(contents_filename))
             hashValue_list.append(load_data(hashValue_filename))
-
-
-
-
-def text_to_sequence(sentence, dictionary):
-    ret = []
-    for word in sentence:
-        if word in dictionary.keys():
-           ret.append(dictionary[word])
-
-    return ret
-
-
-def convert2DListto1DList(list):
-    result = []
-    index = 0
-    for element in list:
-        print(index, end='')
-        for subElement in element:
-            result.append(subElement)
-        index += 1
-
-    return result
-
